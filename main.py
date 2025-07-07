@@ -9,7 +9,6 @@ current_lang = langs['en']
 lang = importlib.import_module(current_lang)
 
 scaler = classes.Scaler()
-drawer = classes.Drawer()
 pathFiles = pathFiles.pathFiles
 mainDir = os.path.dirname(__file__)
 
@@ -84,18 +83,18 @@ rooms = {
                     'pos': [0, 1200],
                     'size': [1600, 1]
                 },
-                4: {
+                'spruce': {
                     'pos': [530, 630],
                     'size': [25, 1]
                 }
             },
             'act': {
-                0: {
+                'spruce1': {
                     'pos': [530, 631],
                     'size': [25, 1],
                     'actSide': 'up'
                 },
-                1: {
+                'spruce2': {
                     'pos': [530, 629],
                     'size': [25, 1],
                     'actSide': 'down'
@@ -135,7 +134,8 @@ index = {
     'dlogLetter': 0,
     'dialog': -1,
 }
-
+dlogs = lang.getTexts(bgsDlog, fonts, 1)
+texts = lang.getTexts(bgsDlog, fonts, 0)
 
 def handleEvents(run):
     pressed_keys = {}
@@ -158,9 +158,10 @@ while run == 'room0':
     run, pressed_keys = handleEvents(run)
     one_keyD = pressed_keys.get
 
-    players = classes.Players(player, rooms[0]['objs'])
+    players = classes.Players(player, rooms[0]['objs']['blocks'])
 
     cameraPos = players.getCameraPos(player, origScrnSize, rooms[0]['size'])
+    drawer = classes.Drawer(origSurface, cameraPos)
 
     for currentPlayer in [player, player2, player3]:
         currentPlayer['oldPos'] = currentPlayer['pos']
@@ -176,51 +177,42 @@ while run == 'room0':
 
     origSurface.blit(rooms[0]['bg'], (-cameraPos[0], -cameraPos[1]))
 
-    drawer.super_draw(origSurface, cameraPos, [
+    drawer.sortDraw([
         (spruce['pos'], spruce['img']),
         (player3['pos'], player3['img']),
         (player2['pos'], player2['img']),
         (player['pos'], player['img']),
         ])
 
-    # if one_keyD(pygame.K_c): gameMenu['active'] = 1 if gameMenu['active'] == 0 else 0
+    if one_keyD(pygame.K_c): gameMenu['active'] = 1 if gameMenu['active'] == 0 else 0
 
-    # if not gameMenu['active']:
-    #     if (players.actObj(0) or
-    #         players.actObj(1)):
-    #         if one_keyD(pygame.K_z) and not dlogWhile[0]:
-    #             one_keyD = handleEvents(run)[1].get
-    #             dlogWhile[0], index['dialog'] = 1, 0
-    #             player['collid'] = {'left': 1, 'right': 1, 'up': 1, 'down': 1}
-    #     if dlogWhile[0]:
-    #         if one_keyD(pygame.K_z):
-    #             if index['dialog'] == 0:
-    #                 one_keyD = handleEvents(run)[1].get
-    #                 index['dlogLetter'], index['dialog'] = 0, 1
-    #             elif index['dialog'] == 1:
-    #                 one_keyD = handleEvents(run)[1].get
-    #                 index['dlogLetter'], index['dialog'] = 0, 2
-    #                 spruce['run'] = 1
-    #             else:
-    #                 player['collid'] = {'left': 0, 'right': 0, 'up': 0, 'down': 0}
-    #                 index['dlogLetter'], index['dialog'] = 0, -1
-    #                 dlogWhile[0] = 0
-    #     if index['dialog'] != -1:
-    #         delay['dialog'], index['dlogLetter'] = drawer.printDialog(origSurface, lang.getDialog(index['dialog'], bgsDlog, fonts), delay['size']['dialog'], delay['dialog'], index['dlogLetter'])
+    if not gameMenu['active']:
+        if (players.actObj(rooms[0]['objs']['act']['spruce1']) or
+            players.actObj(rooms[0]['objs']['act']['spruce2'])):
+            if one_keyD(pygame.K_z) and not dlogWhile[0]:
+                one_keyD = handleEvents(run)[1].get
+                dlogWhile[0] = 1
+                index['dialog'] = 0
+            if index['dialog'] == -1: dlogWhile[0] = 0
+            if dlogWhile[0]: player['collid'] = {'left': 1, 'right': 1, 'up': 1, 'down': 1}
+        index['dialog'] = drawer.whileDlogs(index['dialog'], [dlogs[0], dlogs[1], dlogs[2]], one_keyD)
 
+    if index['dialog'] == 2:
+        spruce['run'] = 1
+        rooms[0]['objs']['blocks']['spruce']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 130]
+        rooms[0]['objs']['act']['spruce1']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 131]
+        rooms[0]['objs']['act']['spruce2']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 129]
+    if spruce['run'] == 1: spruce['pos'][0] += 10
 
-    # if spruce['run'] == 1: spruce['pos'][0] += 10
-    # if gameMenu['active']:
-    #     player['collid'] = {'left': 1, 'right': 1, 'up': 1, 'down': 1}
-    #     origSurface.blit(gameMenu['bg'], (0, 0))
-    #     drawer.drawText(origSurface, fonts['DFfontPath'], 50, 'MENU!', (255, 0, 0), [origScrnSize[0] / 2, 100], 1)
-    #     drawer.drawText(origSurface, fonts['DFfontPath'], 50, 'С - выход из меню', (255, 0, 0), [origScrnSize[0] / 2, 450], 1)
-    #     drawer.drawText(origSurface, fonts['DFfontPath'], 50, 'ESC - выход из игры', (255, 0, 0), [origScrnSize[0] / 2, 500], 1)
+    if gameMenu['active']:
+        player['collid'] = {'left': 1, 'right': 1, 'up': 1, 'down': 1}
+        origSurface.blit(gameMenu['bg'], (0, 0))
+        drawer.drawText(texts[1])
 
 
     if keys[pygame.K_ESCAPE]:
         origSurface.blit(gameMenu['bg'], (0, 0))
-        drawer.drawText(origSurface, fonts['DFfontPath'], 30, 'EXIT? (ESC+Q)', (200, 200, 150), [0, 0], 0)
+        drawer.drawText(texts[0])
         if keys[pygame.K_q]: run = 0
 
     scaledSurfaceSize = scaler.scale(origScrnSize, screenSize, origScrnSize)
