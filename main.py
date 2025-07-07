@@ -199,9 +199,9 @@ while run == 'room0':
 
     if index['dialog'] == 2:
         spruce['run'] = 1
-        rooms[0]['objs']['blocks']['spruce']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 130]
-        rooms[0]['objs']['act']['spruce1']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 131]
-        rooms[0]['objs']['act']['spruce2']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 129]
+    rooms[0]['objs']['blocks']['spruce']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 130]
+    rooms[0]['objs']['act']['spruce1']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 131]
+    rooms[0]['objs']['act']['spruce2']['pos'] = [spruce['pos'][0] + 30, spruce['pos'][1] + 129]
     if spruce['run'] == 1: spruce['pos'][0] += 10
 
     if gameMenu['active']:
