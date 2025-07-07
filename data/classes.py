@@ -1,12 +1,12 @@
 import pygame
 
 class Players:
-    def __init__(self, player, objs):
+    def __init__(self, player, blocks):
         self.player = player
-        self.objs = objs
+        self.blocks = blocks
 
     def move(self):
-        blocks = self.objs['blocks']
+        blocks = self.blocks
         player = self.player
         keys = pygame.key.get_pressed()
         speed = player['speed']['fast'] if keys[pygame.K_x] else player['speed']['df']
@@ -49,9 +49,8 @@ class Players:
         player['pos'] = plyrNewPos
         return player
 
-    def actObj(self, index):
+    def actObj(self, actObj):
         player = self.player
-        actObj = self.objs['act'][index]
         plyrRect = pygame.Rect(player['pos'][0], player['pos'][1] + player['size'][1] - 1, player['size'][0], 1)
         actObjRect = pygame.Rect(actObj['pos'][0], actObj['pos'][1], actObj['size'][0], actObj['size'][1])
         if actObj['actSide'] == 0: actObj['actSide'] = player['side']
@@ -98,31 +97,37 @@ class Players:
 
 
 class Drawer:
-    @staticmethod
-    def super_draw(surface, camera_pos, objs):
+    def __init__(self, surface, cameraPos):
+        self.surface = surface
+        self.cameraPos = cameraPos
+
+    def sortDraw(self, objs):
+        surface = self.surface
+        cameraPos = self.cameraPos
         objs.sort(key=lambda obj: obj[0][1] + obj[1].get_size()[1])
 
         for pos, sprite in objs:
-            surface.blit(sprite, (pos[0] - camera_pos[0], pos[1] - camera_pos[1]))
+            surface.blit(sprite, (pos[0] - cameraPos[0], pos[1] - cameraPos[1]))
 
-    @staticmethod
-    def drawText(surface, font_path, size, text, color, pos, center):
-        font = pygame.font.Font(font_path, size)
-        text = font.render(text, 1, color)
-        if center:
-            pos = text.get_rect(center=(pos[0], pos[1]))
-        return surface.blit(text, pos)
+    def drawText(self, textAll):
+        surface = self.surface
+        font = pygame.font.Font(textAll['fontPath'], textAll['size'])
+        text = font.render(textAll['text'], 1, textAll['color'])
+        if textAll['center']:
+            pos = text.get_rect(center=(textAll['pos'][0], textAll['pos'][1]))
+            return surface.blit(text, pos)
+        else: return surface.blit(text, textAll['pos'])
 
-    @staticmethod
-    def printDialog(surface, dialog, speed, delay, letter_index):
+    def printDialog(self, dialog):
+        surface = self.surface
         keys = pygame.key.get_pressed()
-        font = pygame.font.Font(dialog['font'], dialog['size'])
+        font = pygame.font.Font(dialog['fontPath'], dialog['size'])
         pos = bg_pos = dialog['pos'].copy()
         max_width = dialog['bg'].get_width()
         line = ''
         line_size = [0, font.get_height()]
-        if keys[pygame.K_x]: letter_index = len(dialog['text'])
-        letter = dialog['text'][:letter_index]
+        if keys[pygame.K_x]: dialog['letterIndex'] = len(dialog['text'])
+        letter = dialog['text'][:dialog['letterIndex']]
         words = letter.split(' ')
 
         surface.blit(dialog['bg'], (bg_pos[0], bg_pos[1]))
@@ -146,21 +151,25 @@ class Drawer:
             line_surface = font.render(line, True, dialog['color'])
             surface.blit(line_surface, pos)
 
-        if delay <= 0 and letter_index < len(dialog['text']):
-            letter_index += 1
-            delay = speed
-        delay -= 1
+        if dialog['delay'] <= 0 and dialog['letterIndex'] < len(dialog['text']):
+            dialog['letterIndex'] += 1
+            dialog['delay'] = dialog['speed']
+        dialog['delay'] -= 1
 
-        return delay, letter_index
-    def whileDlogsIndex(self, player, index, indexes, one_keyD, dlogLetter):
-        if one_keyD(pygame.K_z):
-            dlogLetter = 0
-            if index < indexes[-1]:
-                index += 1
+        return dialog
+
+    def whileDlogs(self, dlogIndex, dialogs, oneKeyD):
+        if dlogIndex != -1:
+            if dlogIndex < len(dialogs):
+                self.printDialog(dialogs[dlogIndex])
+                if oneKeyD(pygame.K_z):
+                    if dlogIndex < len(dialogs) - 1:
+                        dlogIndex += 1
+                    else:
+                        dlogIndex = -1
             else:
-                index = -1
-                player['collid'] = {'left': 0, 'right': 0, 'up': 0, 'down': 0}
-        return player, index, dlogLetter
+                dlogIndex = -1
+        return dlogIndex
 
 class Scaler:
     @staticmethod
