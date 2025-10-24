@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 pygame.display.set_caption('JUST_A_GAME...')
 display_info = pygame.display.Info()
 screenSize = [display_info.current_w, display_info.current_h]
-screen = pygame.display.set_mode((screenSize[0], screenSize[1]), pygame.NOFRAME)
+screen = pygame.display.set_mode((screenSize[0], screenSize[1]), pygame.FULLSCREEN)
 
 origScrnSize = [800, 600]
 origSurface = pygame.Surface((origScrnSize[0], origScrnSize[1]))
